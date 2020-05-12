@@ -17,6 +17,7 @@ RAID 1+0:
 RAID 5 :
 空間-1 留一顆存放演算法
 寫入時間較久 , 
+只能掛掉一顆, 
 
 Storage 分類:
   NAS:network attached storage
