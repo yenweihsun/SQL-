@@ -14,11 +14,22 @@ SELECT * FROM sys.filegroups;
 查看檔案資訊:
 EXEC sp_helpfile;
 SELECT * FROM sys.sysfiles;
+--------------------------------------------------
+釋放資料庫沒使用的空間: SHRINK
+釋放資料庫MyDB的空間:
+DBCC SHRINKDATABASE (MyDB,50);
+釋放檔案的空間:  
+(如果是中文名稱,要加上N'')  N - > NONVARCHAR 怕資料庫看不懂中文, 英文就不用擔心
+DBCC SHRINKFILE(N'會計1',5);
 
+釋放未使用的空間:  TRUNCATEONLY
+DBCC SHRINKFILE(N'會計1', 5 , TRUNCATEONLY)
+清空檔案內資料,但保留檔案:  
+DBCC SHRINKFILE(N'會計1',EMPTYFILE)
+--------------------------------------------------
+查目前使用資料庫的人:
+EXEC sp_who;
 
-
-
-
-
+資料庫屬性的選項設定:
 
 
