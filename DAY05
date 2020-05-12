@@ -30,6 +30,77 @@ create table 編號表
 使用情境: 
         當你整合兩家的資料表時，就會可能要用全球唯一號
 ------------------------------------------------------------
+ --constraint 條件約束 :  目的:避免錯誤/無效資料
+ 1. null / not null 
+ 2.check 
+ ------------------------------------------------------------
+ 第一種寫法:
  
- 
- 
+ CREATE TABLE [會員表]
+(
+    編號 INT NOT NULL,
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE NULL,	
+	薪資 INT CHECK(薪資>=23800)
+)
+ON [人事群]
+
+比較複雜的:
+
+CREATE TABLE [會員表]
+(
+    編號 INT NOT NULL,
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE CHECK( 生日<GETDATE() AND (YEAR(GETDATE())-YEAR(生日)>=16) ) NULL,	
+	薪資 INT CHECK(薪資>=23800)
+)
+ON [人事群]
+------------------------------------------------------------------------------------------
+第二種寫法:
+
+CREATE TABLE [會員表]
+(
+    編號 INT NOT NULL,
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE CONSTRAINT 生日檢查 CHECK( 生日<GETDATE() AND (YEAR(GETDATE())-YEAR(生日)>=16) ) NULL,	
+	薪資 INT CONSTRAINT 薪資檢查 CHECK(薪資>=23800)
+)
+ON [人事群]
+------------------------------------------------------------------------------------------
+第三種寫法:
+
+CREATE TABLE 會員表
+(
+    編號 INT NOT NULL,
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE NULL,	
+	薪資 INT CONSTRAINT 最低薪資預設 DEFAULT(23800),
+	建檔時間 DATETIME2(2),
+
+	--整張表的Constraint
+	CONSTRAINT 未來生日檢查 CHECK(生日<GETDATE()),
+	CONSTRAINT 年齡檢查 CHECK(YEAR(GETDATE())-YEAR(生日)>=16),	
+	CONSTRAINT 薪資檢查 CHECK(薪資>=23800)	
+)
+ON [人事群]
+GO
+------------------------------------------------------------------------------------------
+修改table 加上一個欄位 建檔時間 延續上面第三種寫法
+
+ALTER TABLE 會員表 ADD CONSTRAINT 預設建檔時間 DEFAULT SYSDATETIME() FOR 建檔時間;
+GO
+
+在建檔時間上 給予一個預設值
+-----------------------------------------------------------------------------------
+--Primary Key(PK)
+
+
+
+
+
+
+
+
+
+
+
