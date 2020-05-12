@@ -1,0 +1,13 @@
+SQL-SERVER 設定:
+在cmd裡
+指令:
+一、>sqlcmd /?   (查相關參數/語法)
+
+二、>sqlcmd -Slocalhost,1433 -E
+(S -> 主機名稱  port號-> 1433 (可自行設定)  E -> 驗證的意思)
+
+1> SELECT @@SERVICENAME;  //可以看到server 名稱
+2> GO 
+3> exit (離開)
+
+
