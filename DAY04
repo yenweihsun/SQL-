@@ -1,8 +1,86 @@
+名詞介紹:
 
+資料型別:
+BITS
+整數: Tinyint(8) , smallint(16) , int(32) , bigint(64)
+浮點數:                           real(32), float(64) 
+----------------------------------------------------------
+char  varchar 比較:
+char(10)   : 未滿，補空白
+varchar(10): 未滿，不會補空白   (實際是12 多2byte 寫紀錄)
+varchar(max) >設定max 不設限,EX:留言板
 
+unicode 的出現 -> 新編碼utf-8 出現，許多中文字不在無法顯示了:)
+nchar(5)
+nvarchar(5)  
+nvarchar(max)
 
+binary
+varbinary
+varbinary(max)
+----------------------------------------------------------
+計算欄位(computed column):
+  用戶不用key，系統自動計算 (它是虛擬欄位,資料不存在在資料庫上,所以每次slelect * from 都要在算一次XD)
+若想把計算欄位存在硬碟上?? 建表的時候最後面加上persisted 
+----------------------------------------------------------
+決定性函數                        VS.      非決定性函數
+執行結果萬年不變                           執行結果每一次不一樣
+ex: 薪資*12                              EX: getdate()
+計算欄位 persisted
+只有決定性函數才可以存在硬碟上
+-----------------------------------------------------------
+自動編號(identity)(為識別)  總有一天會用完,so....
+特性:
+1.整數 smallint 
+語法>  編號 int IDENTITY(1,1)   // 從1開始, 往後遞增1
+2.每個table 只能有1個
+3.'破表','跳號' 兩個問題發生
+----------------------------------------------------------
+建有欄位的空表:
+create table employee
+(
+	員工編號 int ,
+	姓名  nvarchar(5),
+	性別  bit,
+	到職日 date,
+	薪資 int
+)
+on 人事群
 
+--------------------------------------------
+建表  textimage(文字檔案群組) 跟檔案群組分開:
 
+create table employee_picture
+(
+	員工編號 int ,
+	姓名  nvarchar(5),
+	性別  bit,
+	到職日 date,
+	薪資 int,
+	員工相片 varbinary(max),
+	自傳 nvarchar(max)
 
+)
+on 人事群
+textimage_on 會計群  
+--------------------------------------------
 
+建表(含有計算欄位的表 
+CREATE TABLE employee
+(
+    編號 INT IDENTITY(1,1),             --自動編號 
+	姓名 NVARCHAR(5),	
+	生日 DATE,
+	年齡 AS YEAR(GETDATE())-YEAR(生日),		--計算欄位(Computed Cloumn)
+	薪資 INT,
+	年薪 AS 薪資*15 PERSISTED             --想把計算欄位存在磁碟上的話，加上PERSISTED 
+)
+ON [人事群]
+
+----------------------------------------------
+取得今天日期----
+SELECT GETDATE()	--DATETIME
+SELECT SYSDATETIME()	--DATETIME2
+
+insert employee(姓名,生日,薪資) values('小名','2018/10/10',25000);
 
