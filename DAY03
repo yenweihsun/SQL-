@@ -1,0 +1,24 @@
+以資料庫名=MyDB 為例;
+
+查詢資料庫資訊:
+簡易資訊:
+EXEC SP_HELPDB;
+SP_HELPDB;
+豐富資訊:
+SELECT * FROM SYS.DATABASES;
+看其他資料庫:
+EXEC SP_HELPDB MyDB;
+查看檔案群組資訊:
+EXEC sp_helpfilegroup;
+SELECT * FROM sys.filegroups;
+查看檔案資訊:
+EXEC sp_helpfile;
+SELECT * FROM sys.sysfiles;
+
+
+
+
+
+
+
+
