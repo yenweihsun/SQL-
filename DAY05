@@ -1,0 +1,35 @@
+全球唯一號:
+unique identifier (16bits)
+
+插入資料表示式: 
+newid() 亂數 
+new sequential id() 有順序
+------------------------------------------------------------
+create table 編號表
+(
+	自動編號 int identity(1,1),
+	全球唯一號1  uniqueidentifier,
+	全球唯一號2  uniqueidentifier,
+	資料 NVARCHAR(10)
+)
+------------------------------------------------------------
+select * from 編號表
+insert into 編號表 (資料, 全球唯一號1)values('wow',NEWID()); 
+insert into 編號表 (資料, 全球唯一號1)values('aa',NEWID()); 
+------------------------------------------------------------
+不想每次插入資料都要打newid(),那就建表的時候給定一個預設值 default 如下:
+
+create table 編號表
+(
+	自動編號 int identity(1,1),
+	全球唯一號1  uniqueidentifier default newid(),
+	全球唯一號2  uniqueidentifier default newsequentialid(),
+	資料 NVARCHAR(10)
+)
+
+使用情境: 
+        當你整合兩家的資料表時，就會可能要用全球唯一號
+------------------------------------------------------------
+ 
+ 
+ 
