@@ -1,5 +1,8 @@
 資料庫: MDF(主要群組)+NDF(次要群組)+LDF(記錄檔)
 
+以預設值建立資料庫:
+CREATE DATABASE [My DB]
+DROP DATABASE [My DB];
 
 建立一個新的資料庫:
 
@@ -41,6 +44,48 @@ LOG ON
 
 -----------------------------------------------------------------
 修改設定:
+設定唯讀,讀寫,預設
 ALTER DATABASE MyDB MODIFY FILEGROUP 人事群 DEFAULT;
 ALTER DATABASE MyDB MODIFY FILEGROUP 人事群 READ_ONLY;
 ALTER DATABASE MyDB MODIFY FILEGROUP 人事群 READ_WRITE;
+
+新增/刪除檔案群組:
+ALTER DATABASE MyDB ADD FILEGROUP 財務群;
+ALTER DATABASE MyDB REMOVE FILEGROUP 財務群;
+刪除檔案也同理:
+ALTER DATABASE MyDB REMOVE FILE 檔名;
+
+
+新增一個檔案到一個檔案群組裡:
+ALTER DATABASE MyDB ADD FILE 
+(
+	NAME = 'TEST' ,FILENAME = 'D:\資料庫存放區\TEST.NDF',
+	SIZE = 10MB,MAXSIZE = UNLIMITED,FILEGROWTH = 10%
+)
+TO FILEGROUP 會計群;   (沒指定給哪個群組就丟到primary)
+--------------------------------------------------------------
+使用哪個資料庫:
+USE MASTER;
+USE MyDB;
+/*
+命名規則
+1. 必須文字或底線開頭
+2. 第2字開始，可用 文字、底線、數字
+3. 不可超過128字，且不得使用關鍵字
+*/
+--------------------------------------------------------------
+使資料庫上線/下線:
+ALTER DATABASE MyDB SET ONLINE;
+ALTER DATABASE MyDB SET OFFLINE;
+--------------------------------------------------------------
+使資料庫卸離/附加:
+(要注意的是,附加如果原先位置有所改變,必須把所有檔案位置寫出來告訴資料庫)
+(若是沒改變位置,則只要附加PRIMARY檔案位置即可!!!!)
+EXECUTE sp_detach_db 'MyDB';
+
+EXECUTE sp_attach_db 'MyDB','D:\資料庫存放區\MyDB_DATA.MDF';
+
+EXECUTE sp_attach_db '新新','D:\資料庫存放區\MyDB_DATA.MDF'
+	,'D:\資料庫存放區\會1.NDF','D:\資料庫存放區\會2.ndf','D:\資料庫存放區\會3.ndf','D:\資料庫存放區\TEST.NDF'
+	,'D:\資料庫存放區\人1.ndf','D:\資料庫存放區\人2.ndf'
+	,'D:\資料庫存放區\MyDB_LOG.LDF';
