@@ -1,0 +1,186 @@
+
+宣告變數 用完自己drop掉:
+要一次執行四行------------------------------
+declare @count int;
+set @count = 100;
+set @count = @count + 200;
+select @count;
+---------------------------------------
+一般我們都用where 直接查詢 ,但很慢 ,透過用宣告變數的方式快很多
+
+--不太好(無法觸發生日欄位上的索引的二分搜尋法)
+SELECT * FROM 員工 WHERE 出生日期>DATEADD(YEAR,-40,GETDATE());
+
+--最佳
+DECLARE @date1 DATE;
+SET @date1=DATEADD(YEAR,-40,GETDATE());
+SELECT * FROM 員工 WHERE 出生日期>@date1;
+
+--查詢姓 林或是陳或是張 名字為雅怡的人
+SELECT * FROM 員工 WHERE 姓名 LIKE '[林陳張][雅怡]%'
+
+--擷取字串
+SELECT SUBSTRING('巨匠電腦桃園認證中心',5,2)
+
+--變小寫
+SELECT LOWER('ABCDE')
+--變大寫
+SELECT UPPER('abcde')
+回傳一個index:
+SELECT CHARINDEX('桃園','巨匠電腦桃園認證中心')
+把姓名欄位裡的值全部放在同一個欄位裡
+SELECT STRING_AGG(姓名,',') FROM 員工
+--修改資料庫相容性層級  
+ALTER DATABASE 中文北風 SET COMPATIBILITY_LEVEL = 130
+--用逗號去分割字串 便六行
+SELECT * FROM STRING_SPLIT('AA,BB,CC,DD,EE,FF',',')
+
+--欄位串欄位
+select concat(姓名 ,'   ',稱呼) from 員工
+
+--ISNULL(值,NULL取代值)
+SELECT 姓名,職稱,電話號碼,主管 FROM 員工
+SELECT 姓名,職稱
+	,ISNULL(電話號碼,'未填寫') AS 電話
+	,ISNULL(主管,0) AS 主管
+FROM 員工
+--------------------------------------------------
+做比較的時候用的 如果值1 = 值2 回傳null  ,  值1 != 值2 回傳 值1
+--NULLIF(值1,值2)
+SELECT NULLIF(100,100)
+SELECT NULLIF(100,200)
+--------------------------------------------------
+COALESCE() 可將分散的欄位結合在同一欄位裡
+EX:
+
+CREATE TABLE #員工表
+(
+  員工編號 INT IDENTITY(1,1) PRIMARY KEY,
+  姓名 NVARCHAR(10),
+  員工種類 TINYINT,
+  薪資 MONEY,
+  時薪 MONEY,
+  工作時數 MONEY,
+  銷售金額 MONEY,
+  傭金比率 MONEY
+)
+GO
+
+INSERT INTO #員工表
+ VALUES('王小明',1,35000,NULL,NULL,NULL,NULL);
+INSERT INTO #員工表
+ VALUES('李小明',2,28000,NULL,NULL,NULL,NULL);
+INSERT INTO #員工表
+ VALUES('林大雄',2,NULL,110,275,NULL,NULL);
+INSERT INTO #員工表
+ VALUES('廖小美',2,NULL,125,346,NULL,NULL);
+INSERT INTO #員工表
+ VALUES('林美麗',2,NULL,105,758,NULL,NULL);
+INSERT INTO #員工表
+ VALUES('錢夫人',3,NULL,NULL,NULL,7567632,0.1);
+INSERT INTO #員工表
+ VALUES('ㄚ土伯',3,NULL,NULL,NULL,543243,0.08);
+INSERT INTO #員工表
+ VALUES('忍太郎',3,NULL,NULL,NULL,357654,0.12);
+GO
+
+select * from #員工表
+SELECT 員工編號,姓名,
+	COALESCE(薪資*14,時薪*工作時數,銷售金額*傭金比率) AS 年給付金額
+FROM #員工表
+--------------------------------------------------
+#暫存表:
+1.無論 Use 什麼資料庫  一律建立在tempdb 上
+2.與一般表相同 造成磁碟I/O讀寫
+3.消失時機 作者刪除/離線
+
+#個人暫存                 ##全域暫存          
+ 有紀錄作者                 整個資料庫看的到
+
+語法類似 差別在 # , ##
+ex:
+
+CREATE TABLE #Temp
+(
+    編號 INT,
+	資料 NCHAR(10)
+)
+
+INSERT INTO #Temp VALUES(1,'AAA');
+INSERT INTO #Temp VALUES(2,'BBB');
+INSERT INTO #Temp VALUES(3,'CCC');
+UPDATE #Temp SET 資料=RTRIM(資料)+'ZZ' WHERE 編號=3;
+
+SELECT * FROM #Temp;
+-----------------------------------------------------------------
+抓順序第三個的值:
+SELECT CHOOSE(3,'AA','BB','CC','DD','EE','FF','GG')
+
+------------------------------------------------------------------
+SELECT 員工編號,姓名,稱呼,職稱                          convert 的 style id : 
+	,CONVERT(NVARCHAR,雇用日期,111)                  --  111 參數 表示yy/mm/dd
+	,CONVERT(NVARCHAR,CAST(薪資 AS MONEY),1)         --  ,1 千分位多逗號   50,000
+FROM 員工
+------------------------------------------------------------------
+
+SELECT FORMAT(12345,'C')    -- NT$12,345.00
+SELECT FORMAT(255,'x')      -- ff
+SELECT FORMAT(0.5678,'P')   -- 56.78%
+SELECT FORMAT(12345.567,'#.0')  -- 12345.6
+SELECT FORMAT(12345.567,'#,###.00')  -- 12,345.57
+SELECT FORMAT(GETDATE(),'D') -- 2020年5月13日
+SELECT FORMAT(GETDATE(),'d') -- 2020/5/13
+SELECT FORMAT(GETDATE(),'F') -- 2020年5月13日 下午 03:59:21
+SELECT FORMAT(GETDATE(),'yyyy.MM.dd ddd HH:mm:ss') -- 2020.05.13 週三 15:59:28
+------------------------------------------------------------------
+--定序:
+ 所有的定序:
+SELECT * FROM fn_helpcollations() 
+查台灣的定序:
+SELECT * FROM fn_helpcollations() WHERE [description] LIKE '%Taiwan%' COLLATE Chinese_Taiwan_Stroke_CS_AI
+伺服器的定序一旦建好無法更改,定序可設定在 1.資料庫
+                                      2.表 
+                                      3.join 
+
+--------------------------------------------------------------------
+COLLATE:
+
+SELECT 員工編號,姓名,稱呼,職稱,雇用日期,薪資
+FROM 員工
+ORDER BY 姓名      (按照筆畫多寡排列)
+
+SELECT 員工編號,姓名,稱呼,職稱,雇用日期,薪資
+FROM 員工
+ORDER BY 姓名 COLLATE Chinese_Taiwan_Bopomofo_CI_AI    (會按照台灣ㄅㄆㄇ排列)
+--------------------------------------------------------------------
+1. 資料庫
+    建立資料庫時加在最後一行:
+
+CREATE DATABASE MyDB
+ON PRIMARY
+(
+	NAME='MyDB主檔',FILENAME='C:\Test\MyDB_Data.mdf',
+	SIZE=20MB,MAXSIZE=UNLIMITED,FILEGROWTH=20%
+)
+LOG ON
+(
+	NAME='MyDB記錄檔',FILENAME='C:\Test\MyDB_Log.ldf',
+	SIZE=15MB,MAXSIZE=UNLIMITED,FILEGROWTH=15%
+)
+COLLATE Chinese_Taiwan_Bopomofo_90_CS_AS_KS_WS_SC;
+
+2.表  加在欄位後面
+
+
+USE MyDB
+CREATE TABLE [員工表]
+(
+    [員工編號] INT,
+	姓名1 NVARCHAR(5),
+	姓名2 NVARCHAR(5) COLLATE Chinese_Taiwan_Stroke_CS_AI_WS,
+	性別 BIT,
+	到職日 DATE,
+	薪資 INT
+)
+
+EXEC sp_help 員工表
