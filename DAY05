@@ -31,10 +31,16 @@ create table 編號表
         當你整合兩家的資料表時，就會可能要用全球唯一號
 ------------------------------------------------------------
  --constraint 條件約束 :  目的:避免錯誤/無效資料
+ CONSTRAINT ((物件名稱不能重複))
+ 
  1. null / not null 
  2.check 
+ 3.default
+ 4.primary key (pk)
+ 5.unique
+ 6.foreign key (fk)
  ------------------------------------------------------------
- 第一種寫法:
+1.2. 第一種寫法:
  
  CREATE TABLE [會員表]
 (
@@ -45,7 +51,7 @@ create table 編號表
 )
 ON [人事群]
 
-比較複雜的:
+1.2.比較複雜的:
 
 CREATE TABLE [會員表]
 (
@@ -56,7 +62,7 @@ CREATE TABLE [會員表]
 )
 ON [人事群]
 ------------------------------------------------------------------------------------------
-第二種寫法:
+1.2.第二種寫法:
 
 CREATE TABLE [會員表]
 (
@@ -67,7 +73,7 @@ CREATE TABLE [會員表]
 )
 ON [人事群]
 ------------------------------------------------------------------------------------------
-第三種寫法:
+1.2.3.第三種寫法:
 
 CREATE TABLE 會員表
 (
@@ -93,13 +99,121 @@ GO
 在建檔時間上 給予一個預設值
 -----------------------------------------------------------------------------------
 --Primary Key(PK)
+特色- 不重複 , not null , 目的:確保資料唯一性識別 
+4.PRIMARY KEY--
+CREATE TABLE 會員表2
+(
+	編號 INT, --CONSTRAINT 編號主鑑 PRIMARY KEY ,  (也可寫在上面)
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE NULL,
+	薪資 INT CONSTRAINT 最低薪資 DEFAULT (23800),
+	建檔時間 DATETIME2(2),
+	
+	CONSTRAINT 編號主鑑 PRIMARY KEY(編號),
+	CONSTRAINT 未來生日檢查 CHECK (生日< GETDATE()),
+	CONSTRAINT 年齡檢查 CHECK (YEAR(GETDATE())-YEAR(生日)>=16),
+	CONSTRAINT 薪資檢查 CHECK (薪資>=23800)
+)
+ON 人事群
+---------------------------------------------------------------------------------------
+PRIMARY KEY 由兩個欄位組成:
+4.PRIMARY KEY--
+CREATE TABLE 會員表
+(
+    編號 INT,
+	姓名 NVARCHAR(5) NOT NULL,
+	生日 DATE NULL,	
+	薪資 INT,
+	建檔時間 DATETIME2(2),
+
+	CONSTRAINT 編號主鍵 PRIMARY KEY(編號,姓名)	--複合鍵(Compsited Key)
+)
+ON [人事群]
+
+-------------------------------------------------------------------------------------------
+5.UNIQUE:
+
+CREATE TABLE 會員表
+(
+    編號 INT CONSTRAINT 編號主鍵 PRIMARY KEY,
+	姓名 NVARCHAR(5) CONSTRAINT 姓名唯一 UNIQUE NULL,
+	生日 DATE NULL,	
+	薪資 INT,
+	建檔時間 DATETIME2(2)
+)
+ON [人事群]
+-------------------------------------------------------------------------------------------
+6.foreign key (fk) 關聯鍵 往外面的TABLE 參考資料
+FOREIGN KEY REFERENCES TABLE名(欄位)					
+
+首先建兩個表 小員工 ,小訂單 ， 小訂單的'負責員工'欄位參考 小員工的'員工編號'  進一步設定
+
+CREATE TABLE 小員工
+(
+    員工編號 INT CONSTRAINT 員工號主鍵 PRIMARY KEY,
+	姓名 NVARCHAR(5),	
+	薪資 INT	
+)
+ON [人事群]
+GO
+
+CREATE TABLE 小訂單
+(
+    訂單編號 INT,	
+	金額 INT,
+	負責員工 INT CONSTRAINT 員工號關聯 FOREIGN KEY REFERENCES 小員工(員工編號),
+	訂單時間 DATETIME2(2) CONSTRAINT 預設訂單時間 DEFAULT GETDATE()
+)
+ON [會計群]
+GO
+---------------------------------------------------------------------------------------------
+當原表進行修改/刪除時，與之關聯的表欄位變化
+
+CREATE TABLE 小訂單
+(
+    訂單編號 INT,	
+	金額 INT,
+	負責員工 INT CONSTRAINT 員工號關聯
+		FOREIGN KEY REFERENCES 小員工(員工編號)
+		ON UPDATE CASCADE		-- NO ACTION | CASCADE | SET NULL | SET DEFAULT  
+						
+		ON DELETE SET DEFAULT 
+	,
+	訂單時間 DATETIME2(2) CONSTRAINT 預設訂單時間 DEFAULT GETDATE()
+)
+ON [會計群]
+-----------------------------------------------------------------------------------------------
+-- NO ACTION | CASCADE | SET NULL | SET DEFAULT  
+-- 不進行動作 有存在的關聯紀錄行時，會禁止父資料表的刪除或修改動作 | 原表改變,參考它的表也會改變 | 給他null | 預設值	
 
 
+-----------------------------------------------------------------------------------------------
+設定foreign key 如果沒有進一步設定 ，當原表進行修改/刪除時，與之關聯的表欄位變化  ，它預設是給定 no action ，會禁止父資料表的刪除或修改動作 
+若要解決， 1)把條件約束drop掉
+還是不行修改的話，可能是之前的資料有null值 ，2-法一)把之前的資料作修改 2-法二)忽略之前資料,使用條件 nocheck 
 
+--關閉/啟用 Constraint(條件約束)
+ALTER TABLE 會員表 NOCHECK CONSTRAINT 最低薪資檢查;
+INSERT INTO 會員表(編號,姓名,生日,薪資) VALUES(999,'長期工讀生',NULL,18000);
+ALTER TABLE 會員表 CHECK CONSTRAINT 最低薪資檢查;
 
+-----------------------------------------------------------------------------------------------
+新增欄位:
+ALTER TABLE 會員表 ADD 電子郵件 VARCHAR(50);
+修改欄位資料型別:
+ALTER TABLE 會員表 ALTER COLUMN 薪資 BIGINT;
+刪除欄位:
+ALTER TABLE 會員表 DROP COLUMN 性別;
 
+刪除條件限制:
+ALTER TABLE 會員表 DROP CONSTRAINT 姓名唯一;
+修改欄位的條件限制:
+ALTER TABLE 會員表 ALTER COLUMN 姓名 NVARCHAR(15) NOT NULL;
+-----------------------------------------------------------------------------------------------
+手工補號:
+       情境:自動編號到20號,想要手工補10號
 
-
+set 
 
 
 
