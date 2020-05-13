@@ -52,7 +52,7 @@ DCL(grant revoke deny ) 數據庫操縱語言
 
 TCL (SAVEPOINT 设置保存点  ROLLBACK  回滚  SET TRANSACTION) 事務控制語言
 
-
+---------------------------------------------------------------------------------------
 DELETE   VS.   TRUNCATE 
 
 DELETE FROM 員工表        刪除過程會記錄在LOG,可進行還原
@@ -62,8 +62,95 @@ TRUNCATE TABLE 員工表     清空表的內容,速度快,不留紀錄,無法還
 DELETE -> 自動編號會從之前的編碼往下
 TRUNCATE -> 自動編號從1開始
 
+若該表有被FOREIGN KEY 參考,則無法執行 TRUNCATE
+---------------------------------------------------------------------------------------
+--請謹慎，會全刪~~~~~
+DELETE FROM 會員表;
+TRUNCATE TABLE 會員表;	--若有被 Foreign Key 參考，則無法執行
+---------------------------------------------------------------------------------------
+--請謹慎，會全改
+UPDATE 會員表 SET 薪資=100000;
+---------------------------------------------------------------------------------------
+SQL SERVER  抓取前11筆:
+情境: 當有人薪資相同卻沒辦法憶起抓出來.請使用  WITH TIES(平手) 它可以憶起SHOW出來同薪資的人 
+
+select TOP(11) WITH TIES 員工編號 ,姓名 ,薪資 ,職稱 from 員工 order by 薪資 desc
+
+(備註:
+MySQL 是用
+SELECT column_name(s)
+FROM table_name
+LIMIT number
+
+ORACLE 是用
+SELECT column_name(s)
+FROM table_name
+WHERE ROWNUM <= number
+
+)
+
+去重複指令:
+DISTINCT -> 會先排序 , 在去除重複
+SELECT DISTINCT 客戶編號 FROM 訂貨主檔
+--每一筆資料的各個欄位，只是一堆「值組」(Tuple)
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT 員工編號,姓名,稱呼 AS 性別,職稱
+	,雇用日期
+	,YEAR(GETDATE())-YEAR(雇用日期) AS 年資		--Derived Column 衍生欄位
+	,薪資
+	,薪資*15 AS 年薪
+FROM 員工 
+-- CEILING 無條件進位
+SELECT CEILING(8.8) //9
+SELECT CEILING(8.3) //9
+--FLOOR 無條件捨去
+SELECT FLOOR(8.3) //8
+SELECT FLOOR(8.7) //8
+
+----------------------------------------------------------------------------------------
+日期FUNCTION介紹:
+DATEPART() 取值:
+SELECT DATEPART(WEEKDAY,GETDATE())
+
+轉型:                   值 一個日期相減或相加過的數值  得到結果為一個數字
+CAST( 值 AS  型別 )
+SELECT CAST('2018-05-05' AS INT);  單純日期 會錯誤 
+SELECT CAST('2020-6-11'-GETDATE() AS INT)  計算日期差幾天    轉換成數字 ? 天
+
+CONVERT(型別,值)
+SELECT CONVERT(INT,'2020-6-11'-GETDATE())
 
 
+日期加減:              得到日期
+DATEADD(單位,數量,日期/時間 )
+SELECT DATEADD(MONTH,3,GETDATE());
 
+--DATEDIFF(單位,較早日期/時間,較晚日期/時間)
+SELECT DATEDIFF(DAY,GETDATE(),'2020-6-11')
+SELECT DATEDIFF(HOUR,GETDATE(),'2020-6-11')
+
+
+SELECT '巨匠'+'電腦'
+SELECT '巨匠'+CAST(100 AS VARCHAR)  字元,數字做串接 透過CAST()轉型 在相加
+
+SELECT DATEFROMPARTS(2020,5,1)  把日期串聯
+----------------------------------------------------------------------------------------
+DATETIME  VS.   DATETIME2
+DATETIME  格式: yyyy-MM-dd HH:mm:ss.fff           SELECT GETDATE()
+DATETIME2 格式: yyyy-MM-dd HH:mm:ss.fffffff       SELECT SYSDATETIME()  
+
+SELECT DATETIMEFROMPARTS(2020,5,1,10,20,30,123) 
+SELECT DATETIME2FROMPARTS(2020,5,1,10,20,30,123,6)
+
+--End of Month  月底
+SELECT EOMONTH(GETDATE())
+
+EX; 今天是5/13 請問上個月月初和月底??
+3/13 的月底+1 = 4月1號
+SELECT DATEADD(DAY,1,EOMONTH(DATEADD(MONTH,-2,GETDATE())))
+4/13月底 =  4月30號
+SELECT EOMONTH(DATEADD(MONTH,-1,GETDATE()))
 
 
