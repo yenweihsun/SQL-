@@ -9,6 +9,58 @@ INSERT INTO 員工表(編號,姓名,性別,到職日,薪資)
 	SELECT 員工編號,姓名,稱呼,雇用日期,薪資 FROM 中文北風.dbo.員工 WHERE 薪資>=60000;
 
 
+--SQL Server 特有, 可以直接建出新表, 資料型別設定都繼承來源表
+
+SELECT 員工編號,姓名,稱呼,職稱,雇用日期,薪資              (select * into )  要插入所有的欄位
+INTO 新新.dbo.員工表2
+FROM 中文北風.dbo.員工
+WHERE 薪資>=30000 AND 薪資<=40000;
+
+
+--利用此語法建立類似空表
+SELECT *
+INTO 新新.dbo.員工表3
+FROM 員工表2
+WHERE 薪資<0                (用完全查不到資料的條件去達到建空表的目的~~)
+---------------------------------------------------------------------------------------------
+把EXECUTE sp_helpdb  用來查看db資訊的指令資料 灌到新table裡:
+
+CREATE TABLE 資料庫資訊
+(
+    名字 NVARCHAR(100),
+	大小 NVARCHAR(100),
+	擁有者 NVARCHAR(100),
+	編號 INT,
+	建立時間 DATETIME,
+	狀態 NVARCHAR(1024),
+	相容層級 INT
+);
+
+SELECT * FROM 資料庫資訊
+
+INSERT INTO 資料庫資訊 EXECUTE sp_helpdb;
+
+----------------------------------------------------------------------------------------
+
+名詞介紹:
+
+DDL (create alter drop ) 數據庫定義語言
+ 
+DML(insert update delete select ) 數據操縱語言
+ 
+DCL(grant revoke deny ) 數據庫操縱語言
+
+TCL (SAVEPOINT 设置保存点  ROLLBACK  回滚  SET TRANSACTION) 事務控制語言
+
+
+DELETE   VS.   TRUNCATE 
+
+DELETE FROM 員工表        刪除過程會記錄在LOG,可進行還原
+TRUNCATE TABLE 員工表     清空表的內容,速度快,不留紀錄,無法還原
+
+若有用自動編號,會有差別:
+DELETE -> 自動編號會從之前的編碼往下
+TRUNCATE -> 自動編號從1開始
 
 
 
