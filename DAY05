@@ -213,7 +213,17 @@ ALTER TABLE 會員表 ALTER COLUMN 姓名 NVARCHAR(15) NOT NULL;
 手工補號:
        情境:自動編號到20號,想要手工補10號
 
-set 
+INSERT INTO 編號表(自動編號,資料) VALUES(20,'ZZZ')
+INSERT INTO 編號表(資料) VALUES('ZZZZ')
+INSERT INTO 編號表(資料) VALUES('HHH')
+
+--先告訴資料庫插入的是自動編號欄位 , 即可強行插入一航指定的編號
+SET IDENTITY_INSERT 編號表 ON;
+INSERT INTO 編號表(自動編號,資料) VALUES(10,'JJJ')
+--用完在關閉
+SET IDENTITY_INSERT 編號表 OFF;
+
+INSERT INTO 編號表(資料) VALUES('KKK')
 
 
 
