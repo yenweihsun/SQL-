@@ -230,12 +230,12 @@ exec sp_help 員工表
 
 EXEC sp_helpdb [tempdb]
 
-ALTER DATABASE [tempdb] MODIFY FILE(NAME='tempdev',FILENAME='C:\TempDB新家\tempdb.mdf');
-ALTER DATABASE [tempdb] MODIFY FILE(NAME='templog',FILENAME='C:\TempDB新家\templog.ldf');
-ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp2',FILENAME='C:\TempDB新家\tempdb_mssql_2.ndf');
-ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp3',FILENAME='C:\TempDB新家\tempdb_mssql_3.ndf');
-ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp4',FILENAME='C:\TempDB新家\tempdb_mssql_4.ndf');
-ALTER DATABASE [tempdb] ADD FILE(NAME='temp5',FILENAME='C:\TempDB新家\tempdb_mssql_5.ndf',SIZE=8MB,FILEGROWTH=64MB);
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='tempdev',FILENAME='D:\TempDB新家\tempdb.mdf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='templog',FILENAME='D:\TempDB新家\templog.ldf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp2',FILENAME='D:\TempDB新家\tempdb_mssql_2.ndf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp3',FILENAME='D:\TempDB新家\tempdb_mssql_3.ndf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp4',FILENAME='D:\TempDB新家\tempdb_mssql_4.ndf');
+ALTER DATABASE [tempdb] ADD FILE(NAME='temp5',FILENAME='D:\TempDB新家\tempdb_mssql_5.ndf',SIZE=8MB,FILEGROWTH=64MB);
 
 ------------------------------------------
 要清空才能做刪除
