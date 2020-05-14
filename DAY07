@@ -184,3 +184,65 @@ CREATE TABLE [員工表]
 )
 
 EXEC sp_help 員工表
+
+
+3. join 的方式
+
+透過join 
+CREATE TABLE #Temp1
+(
+    編號 INT,
+	資料 NCHAR(10)
+)
+
+USE [tempdb]
+EXEC sp_help #Temp1
+
+INSERT INTO #Temp1 VALUES(1,'AAA');
+INSERT INTO #Temp1 VALUES(2,'BBB');
+INSERT INTO #Temp1 VALUES(3,'CCC');
+
+USE [MyDB]
+SELECT * FROM 員工表 JOIN #Temp1 ON 員工表.姓名1 = #Temp1.資料
+SELECT * FROM 員工表 JOIN #Temp1 ON 員工表.姓名1 = #Temp1.資料 COLLATE Chinese_Taiwan_Stroke_CI_AS
+
+---------------------------------------------------------------------------------------------------
+CREATE TABLE #Temp2
+(
+    編號 INT,
+	資料 NCHAR(10) COLLATE DATABASE_DEFAULT
+)
+
+USE [tempdb]
+EXEC sp_help #Temp2
+
+INSERT INTO #Temp1 VALUES(1,'AAA');
+INSERT INTO #Temp1 VALUES(2,'BBB');
+INSERT INTO #Temp1 VALUES(3,'CCC');
+
+USE [MyDB]
+SELECT * FROM 員工表 JOIN #Temp2 ON 員工表.姓名1 = #Temp2.資料
+
+exec sp_help 員工表
+
+-----------------------------------------------------------------------------------------------------
+移動TEMPDB
+
+EXEC sp_helpdb [tempdb]
+
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='tempdev',FILENAME='C:\TempDB新家\tempdb.mdf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='templog',FILENAME='C:\TempDB新家\templog.ldf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp2',FILENAME='C:\TempDB新家\tempdb_mssql_2.ndf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp3',FILENAME='C:\TempDB新家\tempdb_mssql_3.ndf');
+ALTER DATABASE [tempdb] MODIFY FILE(NAME='temp4',FILENAME='C:\TempDB新家\tempdb_mssql_4.ndf');
+ALTER DATABASE [tempdb] ADD FILE(NAME='temp5',FILENAME='C:\TempDB新家\tempdb_mssql_5.ndf',SIZE=8MB,FILEGROWTH=64MB);
+
+------------------------------------------
+要清空才能做刪除
+
+USE [tempdb]
+GO
+DBCC SHRINKFILE (N'temp5' , EMPTYFILE)
+GO
+ALTER DATABASE [tempdb] REMOVE FILE [temp5];
+GO
