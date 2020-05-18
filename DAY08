@@ -1,0 +1,13 @@
+union 去除重複
+union all 直接貼上
+
+select 稱呼,職稱,count(*) from 員工
+--group by cube(稱呼,職稱);
+--group by rollup(稱呼,職稱);
+--group by rollup(職稱,稱呼);
+group by grouping sets ((稱呼,職稱),(職稱),());
+
+
+declare @maxprice money;
+select  @maxprice = max(價錢) from 匠匠;
+select * from 巨巨 where 價錢 >= @maxprice;
