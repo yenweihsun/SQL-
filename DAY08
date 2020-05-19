@@ -6,8 +6,61 @@ select 稱呼,職稱,count(*) from 員工
 --group by rollup(稱呼,職稱);
 --group by rollup(職稱,稱呼);
 group by grouping sets ((稱呼,職稱),(職稱),());
+-------------------------------------------------------------------------
+
+/*
+--子查詢
+1. 獨立 / 關聯 子查詢
+2. 子查詢最多32層
+3. 通常效率不佳
+4. 通常10句子查詢中，8~9成都不需要真的用到子查詢
+5. 大部分可以用 Join 來處理掉
+*/
+使用位置:
+where   1.單獨,獨立取單值
+        2.比對清單型(只能一欄)
+        3.測試存在與否?
+
+--效率不佳
+SELECT * FROM 巨巨
+WHERE 價錢>=(SELECT MAX(價錢) FROM 匠匠)
+
+--較佳  (宣告變數)
+DECLARE @maxPrice MONEY;
+SELECT @maxPrice=MAX(價錢) FROM 匠匠
+SELECT * FROM 巨巨 WHERE 價錢>=@maxPrice
+-------------------------------------------------------------------------
 
 
-declare @maxprice money;
-select  @maxprice = max(價錢) from 匠匠;
-select * from 巨巨 where 價錢 >= @maxprice;
+
+-------------------------------------------------------------------------
+where exists 系列---
+效率不會太差,蠻好用的 先抓出存在的條件,在select ,EX: 工廠先抓出是女生的,在叫她們出來操場集合
+
+SELECT * FROM 巨巨 AS A
+WHERE EXISTS(SELECT * FROM 匠匠 WHERE 品名=A.品名)
+
+SELECT * FROM 巨巨 AS A
+WHERE NOT EXISTS(SELECT * FROM 匠匠 WHERE 品名=A.品名)
+-------------------------------------------------------------------------
+
+--From 的子查詢  效率不會太差 , 因為from 執行順序優先度是 "1" 所以不會太慢
+
+
+SELECT 品名,價錢
+FROM (SELECT * FROM 匠匠) AS A
+-------------------------------------------------------------------------
+SELECT * FROM 訂貨明細
+--↓ ↓ ↓ ↓
+SELECT 訂單號碼,單價*數量*(1-折扣) AS 金額 FROM 訂貨明細
+--↓ ↓ ↓ ↓
+SELECT 訂單號碼,ROUND(SUM(單價*數量*(1-折扣)),0) AS 貨款金額
+FROM 訂貨明細
+GROUP BY 訂單號碼
+--↓ ↓ ↓ ↓
+SELECT A.訂單號碼,A.客戶編號,A.員工編號,A.訂單日期
+	,B.貨款金額,A.運費,B.貨款金額+A.運費 AS 總金額
+FROM 訂貨主檔 AS A JOIN (
+	SELECT 訂單號碼,ROUND(SUM(單價*數量*(1-折扣)),0) AS 貨款金額
+	FROM 訂貨明細 GROUP BY 訂單號碼 ) AS B
+	ON A.訂單號碼=B.訂單號碼
