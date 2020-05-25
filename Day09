@@ -1,0 +1,258 @@
+VIEW 建立&使用
+
+CREATE VIEW 訂單一覽檢視
+AS
+	SELECT A.訂單號碼,A.訂單日期,B.公司名稱,B.連絡人,B.連絡人職稱
+		,C.姓名 AS 接單同仁,A.運費,D.貨運公司名稱 AS 運送方式
+	FROM 訂貨主檔 AS A JOIN 客戶 AS B ON A.客戶編號=B.客戶編號
+		JOIN 員工 AS C ON A.員工編號=C.員工編號
+		JOIN 貨運公司 AS D ON A.送貨方式=D.貨運公司編號
+GO
+
+------------------------------------------------------
+
+SELECT * FROM sys.syscomments
+
+SCHEMABINDING 指令 -- 用view去綁定 table ,讓table 無法被刪除和刪減欄位
+
+/* SCHEMABINDING 使用前提
+1. 不得使用 * 號
+2. 物件皆須使用兩段式描述
+*/
+
+ALTER VIEW 巨巨產品檢視
+WITH SCHEMABINDING,ENCRYPTION
+AS
+	SELECT 巨巨.產品編號,巨巨.品名,巨巨.價錢
+	FROM dbo.巨巨	
+GO
+
+SELECT * FROM 巨巨產品檢視
+
+
+ALTER TABLE 巨巨 DROP COLUMN 價錢;  (x)
+DROP TABLE 巨巨   (x)
+------------------------------------------------------
+
+/* 利用View來 INSERT、UPDATE、DELETE 資料的前提
+1. 來源資料只能一張資料表(不能有JOIN)
+2. 不能有衍生欄位
+3. 不能是彙總結果(不能有Group By)
+*/
+
+CREATE VIEW 巨巨40元以上產品檢視
+WITH SCHEMABINDING
+AS
+	SELECT 巨巨.產品編號,巨巨.品名,巨巨.價錢
+	FROM dbo.巨巨
+	WHERE 巨巨.價錢>=40
+GO
+
+SELECT * FROM 巨巨40元以上產品檢視 ORDER BY 價錢 DESC;
+INSERT INTO 巨巨40元以上產品檢視 VALUES(27,'茶葉蛋',10);        (o)
+
+SELECT * FROM 巨巨
+
+-------------------------------
+with check option 指令介紹 - 可在insert時檢查塞入的資料有沒有符合view的where 條件 
+-----------------------------
+ALTER VIEW 巨巨40元以上產品檢視
+WITH SCHEMABINDING
+AS
+	SELECT 巨巨.產品編號,巨巨.品名,巨巨.價錢
+	FROM dbo.巨巨
+	WHERE 巨巨.價錢>=40
+	WITH CHECK OPTION
+GO
+
+INSERT INTO 巨巨40元以上產品檢視 VALUES(28,'純喫茶',25);              (x)
+INSERT INTO 巨巨40元以上產品檢視 VALUES(28,'大罐純喫茶',45,35);        (x)  
+---------------------------------------------------------------------------------------
+
+--ISO SQL:2003
+--CTE(Common Table Expression)   /* 1. 暫存view 不占空間   2. 
+
+WITH Temp(產品號,產品名,售價)
+AS
+(
+	SELECT 產品編號,品名,價錢
+	FROM 巨巨
+)
+
+SELECT * FROM Temp ORDER BY 售價 DESC;
+
+-------------------------------------------
+
+--CTE 的遞迴     /* 先找出最高階層的定為1 之後累加+1  
+
+WITH EE(員工編號,姓名,職稱,階層)
+AS
+(
+	SELECT 員工編號,姓名,職稱,1
+	FROM 員工 
+	WHERE 主管 IS NULL
+	UNION ALL
+	SELECT A.員工編號,A.姓名,A.職稱,B.階層+1
+	FROM 員工 AS A JOIN EE AS B ON A.主管=B.員工編號
+)
+
+SELECT * FROM EE
+----------------------------------------------
+暫存view 寫法 ---
+
+用 指令取 6~10名
+WITH T1 
+AS
+(
+	SELECT TOP(5) 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	FROM 員工 
+	ORDER BY 薪資 DESC
+)
+,T2
+AS
+(
+	SELECT TOP(10) 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	FROM 員工 
+	ORDER BY 薪資 DESC
+)
+
+SELECT T2.*
+FROM T1 RIGHT JOIN T2
+ON T1.員工編號=T2.員工編號
+WHERE T1.員工編號 IS NULL
+
+------------------------------------------------
+兩個view  串接方法指令 --INTERSECT | EXCEPT
+INTERSECT  : 取交集  
+EXCEPT  :  取 T2有的 但沒有t1的
+
+用--INTERSECT | EXCEPT 指令取 6~10名
+
+WITH T1 
+AS
+(
+	SELECT TOP(5) 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	FROM 員工 
+	ORDER BY 薪資 DESC
+)
+,T2
+AS
+(
+	SELECT TOP(10) 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	FROM 員工 
+	ORDER BY 薪資 DESC
+)
+
+
+SELECT * FROM T2
+EXCEPT			--INTERSECT | EXCEPT
+SELECT * FROM T1
+ORDER BY 薪資 DESC
+---------------------------------------------------------
+用自動編號的方式取第6~10名
+
+SELECT
+	IDENTITY(INT,1,1) AS 自動編號
+	,員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+INTO #Temp
+FROM 員工 
+ORDER BY 薪資 DESC
+
+SELECT * FROM #Temp WHERE 自動編號>=6 AND 自動編號<=10
+
+---------------------------------------------------------
+用子查詢方式取6~10名  先排掉前五名,再取五名(6~10)     --此法取越大值越慢
+
+SELECT TOP(5) 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+FROM 員工
+WHERE 員工編號 NOT IN(SELECT TOP(5) 員工編號 FROM 員工 ORDER BY 薪資 DESC)
+ORDER BY 薪資 DESC
+------------------------------------------------------------------------------
+用count(*) 去作出一個欄位叫排名 , 利用自己跟自己比排名 , 他會拿第一高的為0, 排名=> 0,1,2,3,4......
+要取6~10 => 第5~9名
+
+SELECT 員工編號,姓名,稱呼,職稱,雇用日期,主管,薪資
+	,(SELECT COUNT(*) FROM 員工 AS B WHERE B.薪資>A.薪資) AS 排名
+FROM 員工 AS A
+
+--0.0242
+WITH Temp
+AS
+(
+	SELECT 員工編號,姓名,稱呼,職稱,雇用日期,主管,薪資
+		,(SELECT COUNT(*) FROM 員工 AS B WHERE B.薪資>A.薪資) AS 排名
+	FROM 員工 AS A
+)
+
+SELECT * FROM Temp WHERE 排名>=30 AND 排名<=34 ORDER BY 薪資 DESC;
+------------------------------------------------------------------------------
+--SQL2005後
+--排序家族函數   速度快,語法簡單
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	,ROW_NUMBER() OVER(ORDER BY 薪資 DESC) AS 列號
+FROM 員工 
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	,RANK() OVER(ORDER BY 薪資 DESC) AS 列號
+FROM 員工 
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	,DENSE_RANK() OVER(ORDER BY 薪資 DESC) AS 列號
+FROM 員工
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+	,NTILE(4) OVER(ORDER BY 薪資 DESC) AS 列號
+FROM 員工
+
+EX: 
+WITH Temp
+AS
+(
+	SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+		,ROW_NUMBER() OVER(ORDER BY 薪資 DESC) AS 列號
+	FROM 員工 
+) 
+SELECT * FROM Temp WHERE 列號>=31 AND 列號<=35
+
+--SQL2012 家族函數
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資
+	,LAG(薪資) OVER(ORDER BY 薪資 ASC)
+	--,薪資-LAG(薪資) OVER(ORDER BY 薪資 ASC) AS 薪資差
+	,LAG(薪資,2) OVER(ORDER BY 薪資 ASC)
+	,LAG(薪資,2,0) OVER(ORDER BY 薪資 ASC)
+FROM 員工
+
+SELECT 員工編號,姓名,稱呼,職稱,薪資
+	,LEAD(薪資) OVER(ORDER BY 薪資 ASC)	
+	,LEAD(薪資,2) OVER(ORDER BY 薪資 ASC)
+	,LEAD(薪資,2,0) OVER(ORDER BY 薪資 ASC)
+FROM 員工
+--------------------------------------------------------------------
+--速度更快~~
+--SQL2012
+SELECT 員工編號,姓名,稱呼,職稱,薪資,雇用日期,主管
+FROM 員工 
+--ORDER BY 薪資 DESC OFFSET 5 ROWS
+ORDER BY 薪資 DESC OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY;
+-------------------------------------------------------------------
+樞紐語法: 
+
+SELECT 稱呼,職稱,COUNT(*) AS 人數
+FROM 員工
+GROUP BY 稱呼,職稱;
+
+
+WITH Temp
+AS
+(
+	SELECT 稱呼,職稱,COUNT(*) AS 人數
+	FROM 員工
+	GROUP BY 稱呼,職稱
+)
+
+--SELECT 職稱,[先生],ISNULL([小姐],0) AS [女性]
+SELECT 職稱,[先生],[小姐]
+FROM Temp
+PIVOT (SUM(人數) FOR 稱呼 IN([先生],[小姐])) AS P
