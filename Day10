@@ -77,11 +77,27 @@ EX:
 
 資料庫:直譯式 
 Query Compilation: 
-	Parsing  解析錯誤
-		
-		
+
+Parsing  解析錯誤
+    ↓
+Algebrizer Tree 標準化    
+    ↓
+Compilation  編譯
+    ↓
+Optimization 調校
+------------------------------------------------------------------------
+--Stored Procedure  預存程序
+--Create procedure  
+1. 已經編譯過的0/1的機器碼
+2. 預存程序無法也不能搭配其他sql語法
+3. 4大步驟已做完,故速度快!!
 
 
+------------------------------------------------------------------------
+--Stored Procedure  預存程序重新編譯:
+1. 刪除/重建  預存程序
+2. EXEC [DBO].[建一堆表]  WITH RECOMPILE;   --會重新編譯+執行
+3. EXEC SP_RECOMPILE '建一堆表'             --只是編譯,沒有執行  等到下一次某人第一次執行的時候會執行~~
 
 
 
